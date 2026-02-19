@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Безопасная регистрация</title>
+</head>
+<body>
+    <div class="section">
+        <h2>Регистрация</h2>
+        <form id="registerForm">
+            <input type="text" id="regName" placeholder="Имя (2-50 символов)" required>
+            <input type="email" id="regEmail" placeholder="Email" required>
+            <input type="password" id="regPassword" placeholder="Пароль (мин. 8 символов)" required>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+        <div id="regMessage"></div>
+    </div>
+
+    <div class="section">
+        <h2>Вход</h2>
+        <form id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Email" required>
+            <input type="password" id="loginPassword" placeholder="Пароль" required>
+            <button type="submit">Войти</button>
+        </form>
+        <div id="loginMessage"></div>
+    </div>
+    <div class="section">
+        <h2>Пользователи</h2>
+        <button onclick="loadUsers()">Обновить список</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Имя</th>
+                    <th>Email</th>
+                    <th>Создан</th>
+                </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const msgDiv = document.getElementById('regMessage');
+
+            try {
+                const res = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msgDiv.innerHTML = `<div class="message success">${data.message}</div>`;
+                    document.getElementById('registerForm').reset();
+                    loadUsers();
+                } else {
+                    msgDiv.innerHTML = `<div class="message error">${data.error || data.errors?.join(', ')}</div>`;
+                }
+            } catch (err) {
+                msgDiv.innerHTML = `<div class="message error">Ошибка: ${err.message}</div>`;
+            }
+        });
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const msgDiv = document.getElementById('loginMessage');
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msgDiv.innerHTML = `<div class="message success">${data.message}<br>Пользователь: ${data.user.name} (${data.user.email})</div>`;
+                } else {
+                    msgDiv.innerHTML = `<div class="message error">${data.error}</div>`;
+                }
+            } catch (err) {
+                msgDiv.innerHTML = `<div class="message error">Ошибка: ${err.message}</div>`;
+            }
+        });
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/users');
+                const users = await res.json();
+                const tbody = document.getElementById('usersTable');
+                tbody.innerHTML = users.map(u => `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td>${escapeHtml(u.name)}</td>
+                        <td>${escapeHtml(u.email)}</td>
+                        <td>${new Date(u.createdAt).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Ошибка загрузки:', err);
+            }
+        }
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        loadUsers();
+    </script>
+</body>
+</html>
