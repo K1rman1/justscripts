@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SPA - Уязвимая версия</title>
+</head>
+<body>
+    <h1>Мой блог (Уязвимый)</h1>
+    <div id="app">
+        <p>Загрузка...</p>
+    </div>
+    
+    <script>
+        async function loadContent() {
+            const response = await fetch('/api/content');
+            const data = await response.json();
+            
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <h2>${data.title}</h2>
+                <div>${data.content}</div>
+            `;
+        }
+        loadContent();
+    </script>
+</body>
+</html>
